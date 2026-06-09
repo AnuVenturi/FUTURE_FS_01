@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const nodemailer = require('nodemailer');
-const Message = require('../models/Message'); // Make sure this matches your file name
+const Message = require('../models/message'); // Make sure this matches your file name
 
 // Email Transporter Setup
 const transporter = nodemailer.createTransport({
