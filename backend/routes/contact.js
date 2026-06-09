@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const nodemailer = require('nodemailer');
-const Message = require('../models/Message');
+const Message = require('../models/message');
 
 // Email Transporter Setup
 const transporter = nodemailer.createTransport({
