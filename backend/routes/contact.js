@@ -3,13 +3,21 @@ const router = express.Router();
 const nodemailer = require('nodemailer');
 const Message = require('../models/Message');
 
-// Email Transporter Setup
+// Email Transporter Setup - FIXED for Render IPv6 issue
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
-  }
+  },
+  tls: {
+    rejectUnauthorized: false
+  },
+  socketTimeout: 30000,
+  connectionTimeout: 30000,
+  family: 4  // Force IPv4 to avoid ENETUNREACH error
 });
 
 // POST - Submit contact form
