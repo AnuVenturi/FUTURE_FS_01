@@ -1086,7 +1086,10 @@
             <form id="contactForm">
               <div class="form-group"><input type="text" id="name" placeholder="Your name" required></div>
               <div class="form-group"><input type="email" id="email" placeholder="Email address" required></div>
-              <div class="form-group"><textarea rows="3" id="message" placeholder="Your message" required></textarea></div>
+              <div class="form-group">
+                <textarea rows="3" id="message" placeholder="Your message" required></textarea>
+                <small style="color: #7aa89c; display: block; margin-top: 5px;">✏️ Please write at least 10 characters</small>
+              </div>
               <button type="submit" class="submit-btn">Send Message <i class="fas fa-arrow-right"></i></button>
               <div id="formStatus" style="margin-top: 12px; text-align:center; font-size:0.75rem;"></div>
             </form>
@@ -1113,7 +1116,8 @@
 
   const form = document.getElementById('contactForm');
   const statusDiv = document.getElementById('formStatus');
-  const API_URL = 'https://future-fs-01-ygft.onrender.com/api/contact';
+  const API_URL = 'http://localhost:5000/api/contact';
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('name').value.trim();

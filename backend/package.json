@@ -1,7 +1,7 @@
 {
   "name": "portfolio-backend",
   "version": "1.0.0",
-  "description": "Backend API for Venturi Anu Sri Lakshmi's Portfolio with contact form and database",
+  "description": "Backend for portfolio with MongoDB Atlas and Email notifications",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
