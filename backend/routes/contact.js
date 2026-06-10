@@ -1,24 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 const Message = require('../models/Message');
 
-// Email Transporter Setup - FIXED for Render IPv6 issue
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  },
-  tls: {
-    rejectUnauthorized: false
-  },
-  socketTimeout: 30000,
-  connectionTimeout: 30000,
-  family: 4  // Force IPv4 to avoid ENETUNREACH error
-});
+// Initialize SendGrid
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // POST - Submit contact form
 router.post('/', async (req, res) => {
@@ -47,15 +33,15 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    // 1. Save message to MongoDB Atlas
+    // 1. Save message to MongoDB
     const newMessage = new Message({ name, email, message });
     await newMessage.save();
     console.log(`📝 Message saved from ${name} (${email})`);
 
-    // 2. Send Email Notification to YOU
-    await transporter.sendMail({
-      from: `"Portfolio Contact" <${process.env.EMAIL_USER}>`,
+    // 2. Send email notification to YOU
+    const notificationMsg = {
       to: process.env.NOTIFY_EMAIL,
+      from: process.env.FROM_EMAIL,
       subject: `📬 New Portfolio Message from ${name}`,
       html: `
         <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 550px; margin: 0 auto; padding: 25px; border: 1px solid #e0e0e0; border-radius: 15px; background: linear-gradient(135deg, #ffffff, #f9fefc);">
@@ -74,13 +60,15 @@ router.post('/', async (req, res) => {
           <p style="text-align: center; font-size: 12px; color: #8aa89e;">Sent from your portfolio website • ${new Date().toLocaleString()}</p>
         </div>
       `
-    });
+    };
+
+    await sgMail.send(notificationMsg);
     console.log(`📧 Email notification sent to ${process.env.NOTIFY_EMAIL}`);
 
-    // 3. Send Auto-reply to the person who contacted you
-    await transporter.sendMail({
-      from: `"Venturi Anu Sri Lakshmi" <${process.env.EMAIL_USER}>`,
+    // 3. Send auto-reply to user
+    const autoReplyMsg = {
       to: email,
+      from: process.env.FROM_EMAIL,
       subject: "Thank you for reaching out!",
       html: `
         <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 30px; border: 1px solid #e0e0e0; border-radius: 15px;">
@@ -100,7 +88,9 @@ router.post('/', async (req, res) => {
           <p style="font-size: 11px; text-align: center; color: #b8ddd2;">This is an automated response. Please do not reply directly to this email.</p>
         </div>
       `
-    });
+    };
+
+    await sgMail.send(autoReplyMsg);
     console.log(`📧 Auto-reply sent to ${email}`);
 
     res.status(200).json({ 
@@ -110,6 +100,9 @@ router.post('/', async (req, res) => {
 
   } catch (error) {
     console.error('Error processing contact form:', error);
+    if (error.response) {
+      console.error('SendGrid error:', error.response.body);
+    }
     res.status(500).json({ 
       success: false, 
       error: 'Failed to send message. Please try again later.' 
@@ -117,7 +110,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// GET - Fetch all messages (admin only)
+// GET - Fetch all messages
 router.get('/', async (req, res) => {
   try {
     const messages = await Message.find().sort({ createdAt: -1 }).limit(100);
